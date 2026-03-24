@@ -1,13 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:gravity="center"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/background_color"
+    android:padding="20dp">
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"/>
+
+    <TextView
+        android:id="@+id/alarmTitle"
+        android:text="Alarm Clock"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="30dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"/>
+
+    <FrameLayout
+        android:layout_width="320dp"
+        android:layout_height="200dp"
+        android:layout_marginBottom="30dp"
+        android:background="@drawable/alarm_input_bg"
+        android:elevation="6dp"
+        android:layout_gravity="center_horizontal">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="20dp">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="15dp">
+
+                <EditText
+                    android:id="@+id/alarmHoursInput"
+                    android:hint="HH"
+                    android:inputType="number"
+                    android:maxLength="2"
+                    android:textSize="48sp"
+                    android:textStyle="bold"
+                    android:textAlignment="center"
+                    android:background="@drawable/input_bg"
+                    android:textColor="@color/text_primary"
+                    android:layout_width="80dp"
+                    android:layout_height="70dp"
+                    android:layout_marginEnd="15dp"/>
+
+                <TextView
+                    android:text=":"
+                    android:textSize="48sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="10dp"/>
+
+                <EditText
+                    android:id="@+id/alarmMinutesInput"
+                    android:hint="MM"
+                    android:inputType="number"
+                    android:maxLength="2"
+                    android:textSize="48sp"
+                    android:textStyle="bold"
+                    android:textAlignment="center"
+                    android:background="@drawable/input_bg"
+                    android:textColor="@color/text_primary"
+                    android:layout_width="80dp"
+                    android:layout_height="70dp"
+                    android:layout_marginStart="15dp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp">
+
+                <ToggleButton
+                    android:id="@+id/alarmAmPmToggle"
+                    android:textOn="PM"
+                    android:textOff="AM"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/toggle_bg"
+                    android:layout_width="80dp"
+                    android:layout_height="45dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp">
+
+        <TextView
+            android:text="Alarm Set For:"
+            android:textSize="14sp"
+            android:textColor="@color/text_secondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"/>
+
+        <TextView
+            android:id="@+id/alarmDisplayText"
+            android:text="--:-- AM"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/accent_color"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="280dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="35dp"
+        android:background="@drawable/status_indicator_bg"
+        android:elevation="4dp"
+        android:layout_gravity="center_horizontal">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/alarmStatusText"
+                android:text="Alarm is OFF"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:id="@+id/alarmCountdownText"
+                android:text=""
+                android:textSize="14sp"
+                android:textColor="@color/text_secondary"
+                android:layout_marginTop="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp">
+
+        <Button
+            android:id="@+id/setAlarmBtn"
+            android:text="Set Alarm"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:background="@drawable/button_start_bg"
+            android:layout_width="120dp"
+            android:layout_height="55dp"
+            android:layout_marginEnd="15dp"/>
+
+        <Button
+            android:id="@+id/cancelAlarmBtn"
+            android:text="Cancel"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:background="@drawable/button_stop_bg"
+            android:layout_width="120dp"
+            android:layout_height="55dp"
+            android:layout_marginStart="15dp"
+            android:enabled="false"/>
+
+    </LinearLayout>
 
     <Button
-        android:id="@+id/setAlarmBtn"
-        android:text="Set Alarm (10 seconds)"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:id="@+id/dismissAlarmBtn"
+        android:text="Dismiss"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_secondary"
+        android:background="@drawable/button_reset_bg"
+        android:layout_width="150dp"
+        android:layout_height="45dp"
+        android:layout_marginBottom="20dp"
+        android:visibility="gone"/>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"/>
 
 </LinearLayout>

@@ -10,25 +10,17 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import android.widget.ToggleButton
+import android.app.Activity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
         val btnClock = findViewById<Button>(R.id.btnClock)
         val btnAlarm = findViewById<Button>(R.id.btnAlarm)
         val btnTimer = findViewById<Button>(R.id.btnTimer)
@@ -53,26 +45,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showClock() {
-
         val container = findViewById<FrameLayout>(R.id.container)
         val view = layoutInflater.inflate(R.layout.clock_layout, container, false)
 
-        val clockText = view.findViewById<TextView>(R.id.clockText)
+        val hoursText = view.findViewById<TextView>(R.id.hoursText)
+        val minutesText = view.findViewById<TextView>(R.id.minutesText)
+        val secondsText = view.findViewById<TextView>(R.id.secondsText)
+        val ampmText = view.findViewById<TextView>(R.id.ampmText)
+        val dateText = view.findViewById<TextView>(R.id.dateText)
 
         container.removeAllViews()
-
         container.addView(view)
-
 
         val handler = Handler(Looper.getMainLooper())
 
         val runnable = object : Runnable {
             override fun run() {
+                val calendar = java.util.Calendar.getInstance()
+                val hours = calendar.get(java.util.Calendar.HOUR)
+                val minutes = calendar.get(java.util.Calendar.MINUTE)
+                val seconds = calendar.get(java.util.Calendar.SECOND)
+                val ampm = if (calendar.get(java.util.Calendar.AM_PM) == java.util.Calendar.AM) "AM" else "PM"
 
-                val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-                val currentTime = sdf.format(Date())
+                hoursText.text = String.format("%02d", hours)
+                minutesText.text = String.format("%02d", minutes)
+                secondsText.text = String.format("%02d", seconds)
+                ampmText.text = ampm
 
-                clockText.text = currentTime
+                val sdf = SimpleDateFormat("EEEE, MMMM dd, yyyy", Locale.getDefault())
+                dateText.text = sdf.format(Date())
 
                 handler.postDelayed(this, 1000)
             }
@@ -80,106 +81,272 @@ class MainActivity : AppCompatActivity() {
 
         handler.post(runnable)
     }
+
     fun showAlarm() {
-
         val view = layoutInflater.inflate(R.layout.alarm_layout, null)
-
         val container = findViewById<FrameLayout>(R.id.container)
 
         container.removeAllViews()
         container.addView(view)
 
-        val button = view.findViewById<Button>(R.id.setAlarmBtn)
+        val alarmHoursInput = view.findViewById<EditText>(R.id.alarmHoursInput)
+        val alarmMinutesInput = view.findViewById<EditText>(R.id.alarmMinutesInput)
+        val alarmAmPmToggle = view.findViewById<ToggleButton>(R.id.alarmAmPmToggle)
+        val alarmDisplayText = view.findViewById<TextView>(R.id.alarmDisplayText)
+        val alarmStatusText = view.findViewById<TextView>(R.id.alarmStatusText)
+        val alarmCountdownText = view.findViewById<TextView>(R.id.alarmCountdownText)
+        val setAlarmBtn = view.findViewById<Button>(R.id.setAlarmBtn)
+        val cancelAlarmBtn = view.findViewById<Button>(R.id.cancelAlarmBtn)
+        val dismissAlarmBtn = view.findViewById<Button>(R.id.dismissAlarmBtn)
 
-        button.setOnClickListener {
+        var alarmTimer: CountDownTimer? = null
+        var alarmSet = false
 
-            Handler(Looper.getMainLooper()).postDelayed({
-
-                Toast.makeText(
-                    this,
-                    "Alarm Triggered!",
-                    Toast.LENGTH_LONG
-                ).show()
-
-            }, 10000)
-
+        fun updateAlarmDisplay() {
+            val hours = alarmHoursInput.text.toString().padStart(2, '0')
+            val minutes = alarmMinutesInput.text.toString().padStart(2, '0')
+            val ampm = if (alarmAmPmToggle.isChecked) "PM" else "AM"
+            alarmDisplayText.text = "$hours:$minutes $ampm"
         }
-    }    fun showTimer() {
 
+        setAlarmBtn.setOnClickListener {
+            val hours = alarmHoursInput.text.toString().toIntOrNull() ?: 0
+            val minutes = alarmMinutesInput.text.toString().toIntOrNull() ?: 0
+
+            if (hours < 0 || hours > 12 || minutes < 0 || minutes > 59) {
+                Toast.makeText(this, "Invalid time entered", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (hours == 0 && minutes == 0) {
+                Toast.makeText(this, "Please enter a valid time", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            updateAlarmDisplay()
+            alarmSet = true
+            alarmStatusText.text = "Alarm is ON"
+            setAlarmBtn.isEnabled = false
+            cancelAlarmBtn.isEnabled = true
+
+            val totalMillis = (hours * 3600000L) + (minutes * 60000L)
+
+            alarmTimer?.cancel()
+            alarmTimer = object : CountDownTimer(totalMillis, 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    val remainingHours = (millisUntilFinished / 3600000)
+                    val remainingMinutes = (millisUntilFinished % 3600000) / 60000
+                    val remainingSeconds = (millisUntilFinished % 60000) / 1000
+
+                    alarmCountdownText.text = String.format(
+                        "Time until alarm: %02d:%02d:%02d",
+                        remainingHours,
+                        remainingMinutes,
+                        remainingSeconds
+                    )
+                }
+
+                override fun onFinish() {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Alarm Triggered! ${alarmDisplayText.text}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    alarmStatusText.text = "Alarm TRIGGERED!"
+                    alarmCountdownText.text = ""
+                    dismissAlarmBtn.visibility = android.view.View.VISIBLE
+                }
+            }.start()
+        }
+
+        cancelAlarmBtn.setOnClickListener {
+            alarmTimer?.cancel()
+            alarmSet = false
+            alarmStatusText.text = "Alarm is OFF"
+            alarmCountdownText.text = ""
+            alarmDisplayText.text = "--:-- AM"
+            setAlarmBtn.isEnabled = true
+            cancelAlarmBtn.isEnabled = false
+            dismissAlarmBtn.visibility = android.view.View.GONE
+            Toast.makeText(this, "Alarm cancelled", Toast.LENGTH_SHORT).show()
+        }
+
+        dismissAlarmBtn.setOnClickListener {
+            alarmTimer?.cancel()
+            alarmSet = false
+            alarmStatusText.text = "Alarm is OFF"
+            alarmCountdownText.text = ""
+            alarmDisplayText.text = "--:-- AM"
+            setAlarmBtn.isEnabled = true
+            cancelAlarmBtn.isEnabled = false
+            dismissAlarmBtn.visibility = android.view.View.GONE
+        }
+    }
+
+    fun showTimer() {
         val container = findViewById<FrameLayout>(R.id.container)
-
         val view = layoutInflater.inflate(R.layout.timer_layout, container, false)
 
         container.removeAllViews()
         container.addView(view)
 
-        val input = view.findViewById<EditText>(R.id.timerInput)
-        val timerText = view.findViewById<TextView>(R.id.timerText)
+        val timerMinutesInput = view.findViewById<EditText>(R.id.timerMinutesInput)
+        val timerSecondsInput = view.findViewById<EditText>(R.id.timerSecondsInput)
+        val timerMinutesText = view.findViewById<TextView>(R.id.timerMinutesText)
+        val timerSecondsText = view.findViewById<TextView>(R.id.timerSecondsText)
+        val timerMillisecondsText = view.findViewById<TextView>(R.id.timerMillisecondsText)
         val startBtn = view.findViewById<Button>(R.id.startTimerBtn)
+        val pauseBtn = view.findViewById<Button>(R.id.stopTimerBtn)
+        val resetBtn = view.findViewById<Button>(R.id.resetTimerBtn)
+
+        var countDownTimer: CountDownTimer? = null
+        var timerRunning = false
+
+        fun resetDisplay() {
+            timerMinutesText.text = "00"
+            timerSecondsText.text = "00"
+            timerMillisecondsText.text = "00"
+        }
 
         startBtn.setOnClickListener {
+            if (!timerRunning) {
+                val minutes = timerMinutesInput.text.toString().toIntOrNull() ?: 0
+                val seconds = timerSecondsInput.text.toString().toIntOrNull() ?: 0
 
-            val seconds = input.editableText.toString().toIntOrNull() ?: 0
-
-            object : CountDownTimer(seconds * 1000L, 1000) {
-
-                override fun onTick(millisUntilFinished: Long) {
-                    timerText.text = (millisUntilFinished / 1000).toString()
+                if (minutes == 0 && seconds == 0) {
+                    Toast.makeText(this, "Please enter a valid time", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
                 }
 
-                override fun onFinish() {
-                    timerText.text = getString(android.R.string.ok)
-                }
+                val totalMillis = (minutes * 60000L) + (seconds * 1000L)
 
-            }.start()
+                countDownTimer?.cancel()
+                countDownTimer = object : CountDownTimer(totalMillis, 10) {
+                    override fun onTick(millisUntilFinished: Long) {
+                        val mins = (millisUntilFinished / 60000) % 60
+                        val secs = (millisUntilFinished / 1000) % 60
+                        val millis = (millisUntilFinished % 1000) / 10
+
+                        timerMinutesText.text = String.format("%02d", mins)
+                        timerSecondsText.text = String.format("%02d", secs)
+                        timerMillisecondsText.text = String.format("%02d", millis)
+                    }
+
+                    override fun onFinish() {
+                        timerMinutesText.text = "00"
+                        timerSecondsText.text = "00"
+                        timerMillisecondsText.text = "00"
+                        Toast.makeText(this@MainActivity, "Timer Finished!", Toast.LENGTH_LONG).show()
+                        timerRunning = false
+                        startBtn.isEnabled = true
+                        pauseBtn.isEnabled = false
+                        resetBtn.isEnabled = true
+                    }
+                }.start()
+
+                timerRunning = true
+                startBtn.isEnabled = false
+                pauseBtn.isEnabled = true
+                resetBtn.isEnabled = false
+                timerMinutesInput.isEnabled = false
+                timerSecondsInput.isEnabled = false
+            }
+        }
+
+        pauseBtn.setOnClickListener {
+            countDownTimer?.cancel()
+            timerRunning = false
+            startBtn.isEnabled = true
+            pauseBtn.isEnabled = false
+            resetBtn.isEnabled = true
+            timerMinutesInput.isEnabled = true
+            timerSecondsInput.isEnabled = true
+        }
+
+        resetBtn.setOnClickListener {
+            countDownTimer?.cancel()
+            timerRunning = false
+            resetDisplay()
+            timerMinutesInput.text.clear()
+            timerSecondsInput.text.clear()
+            startBtn.isEnabled = true
+            pauseBtn.isEnabled = false
+            resetBtn.isEnabled = false
+            timerMinutesInput.isEnabled = true
+            timerSecondsInput.isEnabled = true
         }
     }
+
     fun showStopwatch() {
-
         val view = layoutInflater.inflate(R.layout.stopwatch_layout, null)
-
         val container = findViewById<FrameLayout>(R.id.container)
 
         container.removeAllViews()
         container.addView(view)
 
-        val text = view.findViewById<TextView>(R.id.stopwatchText)
-        val button = view.findViewById<Button>(R.id.startStopwatchBtn)
+        val minutesText = view.findViewById<TextView>(R.id.minutesText)
+        val secondsText = view.findViewById<TextView>(R.id.secondsText)
+        val millisecondsText = view.findViewById<TextView>(R.id.millisecondsText)
+        val startBtn = view.findViewById<Button>(R.id.startStopwatchBtn)
+        val stopBtn = view.findViewById<Button>(R.id.stopStopwatchBtn)
+        val resetBtn = view.findViewById<Button>(R.id.resetStopwatchBtn)
 
         val handler = Handler(Looper.getMainLooper())
 
         var startTime = 0L
+        var pausedTime = 0L
         var running = false
 
         val runnable = object : Runnable {
             override fun run() {
-
                 if (running) {
-                    val elapsed = (SystemClock.elapsedRealtime() - startTime) / 1000
-                    text.text = elapsed.toString()
-                    handler.postDelayed(this, 1000)
-                }
+                    val elapsed = SystemClock.elapsedRealtime() - startTime + pausedTime
 
+                    val totalMillis = elapsed % 1000
+                    val totalSeconds = (elapsed / 1000) % 60
+                    val totalMinutes = (elapsed / 60000) % 60
+
+                    minutesText.text = String.format("%02d", totalMinutes)
+                    secondsText.text = String.format("%02d", totalSeconds)
+                    millisecondsText.text = String.format("%02d", totalMillis / 10)
+
+                    handler.postDelayed(this, 10)
+                }
             }
         }
 
-        button.setOnClickListener {
-
+        startBtn.setOnClickListener {
             if (!running) {
-
                 startTime = SystemClock.elapsedRealtime()
                 running = true
+                startBtn.isEnabled = false
+                stopBtn.isEnabled = true
+                resetBtn.isEnabled = false
                 handler.post(runnable)
-
-                button.text = "Stop"
-
-            } else {
-
-                running = false
-                button.text = "Start"
-
             }
+        }
 
+        stopBtn.setOnClickListener {
+            if (running) {
+                running = false
+                pausedTime += SystemClock.elapsedRealtime() - startTime
+                startBtn.isEnabled = true
+                stopBtn.isEnabled = false
+                resetBtn.isEnabled = true
+            }
+        }
+
+        resetBtn.setOnClickListener {
+            running = false
+            pausedTime = 0L
+            startTime = 0L
+            minutesText.text = "00"
+            secondsText.text = "00"
+            millisecondsText.text = "00"
+            startBtn.isEnabled = true
+            stopBtn.isEnabled = false
+            resetBtn.isEnabled = false
+            handler.removeCallbacks(runnable)
         }
     }
 }
